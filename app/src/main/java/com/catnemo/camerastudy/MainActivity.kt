@@ -2,37 +2,49 @@ package com.catnemo.camerastudy
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.SurfaceTexture
-import android.hardware.Camera
-import android.opengl.GLES30
 import android.os.Bundle
-import android.provider.MediaStore
-import android.support.v7.app.AppCompatActivity
+import android.os.SystemClock
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.widget.ImageView
-import android.widget.Toast
-import com.catnemo.camerastudy.glesutil.FullFrameRect
+import android.widget.RadioGroup
+import android.widget.SeekBar
+import androidx.appcompat.app.AppCompatActivity
+import com.catnemo.camerastudy.util.MediaUtil
 import com.catnemo.camerastudy.util.PermissionHelper
+import com.catnemo.zfilter.FilterDrawer
+import com.catnemo.zfilter.TextureInfo
+import com.catnemo.zfilter.filter.BlurScreenFilter
 import kotlinx.android.synthetic.main.activity_main.*
+import top.catnemo.zcamera.RecordConfig
 import top.catnemo.zcamera.interfazz.ICapturePhoto
+import top.catnemo.zcamera.interfazz.IRecodingCallback
 import top.catnemo.zcamera.interfazz.IZCameraDrawer
 import top.catnemo.zcamera.interfazz.OnCameraOperateCallback
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import java.util.*
 
-class MainActivity : AppCompatActivity(), OnCameraOperateCallback, IZCameraDrawer, Camera.PreviewCallback {
+class MainActivity : AppCompatActivity(), OnCameraOperateCallback, IZCameraDrawer {
 
-    // todo 开发特效类 获取保存媒体文件地址
     companion object {
         const val TAG = "ZCamera"
     }
 
+    private var record = false
+
+    private var speed = 1.0f
+
+    private val list = ArrayList<String>()
+    private var currentEffec: Effect? = null
     override
     fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,58 +53,190 @@ class MainActivity : AppCompatActivity(), OnCameraOperateCallback, IZCameraDrawe
         setContentView(R.layout.activity_main)
         z_camera_view.mCameraOperateCallback = this
         z_camera_view.setIDrawer(this)
+
+        view_effect.init(object : EffectAdapter.OnEffectClick {
+            override fun onEffectClick(effect: Effect) {
+                view_effect.visibility = View.INVISIBLE
+                z_camera_view.queueEvent {
+                    if (effect.name == "NONE") {
+                        currentEffec = null
+                        FilterDrawer.sInstance?.updateEffectFilter(null)
+                        return@queueEvent
+                    }
+                    currentEffec = effect
+                    FilterDrawer.sInstance?.updateEffectFilter(effect.filter)
+                }
+            }
+        })
+
+        view_filter.init(object : FilterAdapter.OnFilterClick {
+            override fun onFilterClick(effect: Filter) {
+                view_filter.visibility = View.INVISIBLE
+                z_camera_view.queueEvent {
+                    FilterDrawer.sInstance?.updateLutFilter(effect.lutPath)
+                }
+            }
+        })
+
+        view_filter.onFilterProgressChanged = object : FilterView.OnFilterProgressChanged {
+            override fun onProgess(process: Float) {
+                FilterDrawer.sInstance?.updateLutProgess(process)
+            }
+        }
+
         btn_switch_camera.setOnClickListener {
             z_camera_view.switchCamera()
         }
         btn_flash.setOnClickListener {
             z_camera_view.openFlash()
         }
-
         gl_surface_view_container.setOnTouchListener { v, event ->
             doFocus(event)
             return@setOnTouchListener true
         }
 
         beauty.setOnClickListener {
+            if (view_effect.visibility == View.INVISIBLE) {
+                view_effect.visibility = View.VISIBLE
+                view_filter.visibility = View.INVISIBLE
+            } else {
+                view_effect.visibility = View.INVISIBLE
+            }
+        }
 
+        filter.setOnClickListener {
+            if (view_filter.visibility == View.INVISIBLE) {
+                view_filter.visibility = View.VISIBLE
+                view_effect.visibility = View.INVISIBLE
+            } else {
+                view_filter.visibility = View.INVISIBLE
+            }
         }
 
         btn_record.setOnClickListener {
-            //            startRecord()
-            z_camera_view.takePicture(object : ICapturePhoto {
-                override fun onCapturePhoto(byteArray: ByteArray) {
-                    val buf = ByteBuffer.allocateDirect(byteArray.size).order(ByteOrder.LITTLE_ENDIAN)
-                    buf.put(byteArray)
-                    buf.position(0)
-                    val bitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888)
-                    bitmap.copyPixelsFromBuffer(buf)
-                    val mtx = Matrix()
-                    mtx.postScale(-1f, 1f)
-                    mtx.postRotate(180f)
-                    MediaStore.Images.Media.insertImage(contentResolver, Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, mtx, false), "Zcamera", "zjj")
+            if (record) {
+                z_camera_view.stopRecord()
+            } else {
+                if (!PermissionHelper.hasWriteStoragePermission(this)) {
+                    PermissionHelper.requestWriteStoragePermission(this)
+                    return@setOnClickListener
+                }
+                if (!PermissionHelper.hasAudioRecordPermission(this)) {
+                    PermissionHelper.requestAudioRecordPermission(this)
+                    return@setOnClickListener
+                }
+                startRecording()
+            }
+        }
+        btn_capture.setOnClickListener { takePicture() }
+
+        btn_speed.setOnClickListener {
+            if (speed_layout.visibility == View.GONE) {
+                speed_layout.visibility = View.VISIBLE
+            } else {
+                speed_layout.visibility = View.GONE
+            }
+        }
+        speed_layout.setOnCheckedChangeListener { group, checkedId ->
+            when (checkedId) {
+                R.id.normal -> {
+                    speed = 1.0f
+                }
+                R.id.slow -> {
+                    speed = 0.8f
+                }
+                R.id.slowly -> {
+                    speed = 0.4f
+                }
+                R.id.fast -> {
+                    speed = 1.5f
+                }
+                R.id.fastly -> {
+                    speed = 2.0f
+                }
+            }
+        }
+
+        seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    z_camera_view.updateExposureCompensation(progress)
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+            }
+        })
+    }
+
+    private fun startRecording() {
+        if (speed_layout.visibility == View.VISIBLE) {
+            speed_layout.visibility = View.GONE
+        }
+        val outputFile = MediaUtil.getOutputMediaFile(MediaUtil.MEDIA_TYPE_VIDEO)
+        outputFile?.let { file ->
+            z_camera_view.startRecord(object : IRecodingCallback {
+                override fun onRecordingStart() {
+                    runOnUiThread {
+                        btn_record.text = "录制中"
+                        record = true
+                    }
+
                 }
 
+                override fun onRecordingStop(outputPath: String) {
+                    runOnUiThread {
+                        record = false
+                        btn_record.text = "录制"
+                        Log.d("zjj", "out $outputPath")
+                        list.add(outputPath)
+                    }
+                }
+
+                override val recordConfig: RecordConfig
+                    get() {
+                        val config = RecordConfig(720, 1280, file.path)
+                        config.isMute = false
+                        config.speed = speed
+                        Log.d("zjj", config.toString())
+                        return config
+                    }
+
+
+                override fun onRecodingError(errorMsg: String) {
+
+                }
             })
         }
     }
 
-//    private fun startRecord() {
-//        gl_surface_view.queueEvent {
-//            if (mEncoder.isRecording) {
-//                runOnUiThread {
-//                    btn_record.text = "录制"
-//                }
-//                mEncoder.stopRecording()
-//            } else {
-//                val outfile = File("sdcard/${System.currentTimeMillis()}.mp4")
-//                mEncoder.startRecording(TextureMovieEncoder.EncoderConfig(outfile, CameraInstance.mPreViewWidth, CameraInstance.mPreViewHeight, 1000000, EGL14.eglGetCurrentContext()))
-//                runOnUiThread {
-//                    btn_record.text = "停止"
-//                }
-//            }
-//            mRender.isRecoding = mEncoder.isRecording
-//        }
-//    }
+    private fun takePicture() {
+        z_camera_view.takePicture(object : ICapturePhoto {
+            override fun onCapturePhoto(buffer: ByteBuffer) {
+                val bitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888)
+                bitmap.copyPixelsFromBuffer(buffer)
+                buffer.rewind()
+                val mtx = Matrix()
+                mtx.postScale(-1f, 1f)
+                mtx.postRotate(180f)
+                try {
+                    val fos = FileOutputStream(MediaUtil.getOutputMediaFile(MediaUtil.MEDIA_TYPE_IMAGE))
+                    val newBitMap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, mtx, false)
+                    newBitMap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+                    fos.close()
+                    newBitMap.recycle()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    bitmap.recycle()
+                }
+            }
+        })
+    }
 
     /**
      * 聚焦
@@ -108,8 +252,9 @@ class MainActivity : AppCompatActivity(), OnCameraOperateCallback, IZCameraDrawe
 
     override fun onResume() {
         super.onResume()
+        z_camera_view.onResume()
         if (PermissionHelper.hasCameraPermission(this)) {
-            z_camera_view.onResume()
+            z_camera_view?.openCamera()
         } else {
             PermissionHelper.requestCameraPermission(this)
         }
@@ -128,11 +273,16 @@ class MainActivity : AppCompatActivity(), OnCameraOperateCallback, IZCameraDrawe
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (!PermissionHelper.hasCameraPermission(this)) {
-            Toast.makeText(this, "需要相机权限，开启应用", Toast.LENGTH_SHORT).show()
+        if (requestCode == PermissionHelper.REQUES_CAMERA_PERMISSION) {
+            if (PermissionHelper.hasCameraPermission(this)) {
+                z_camera_view.openCamera()
+            }
         } else {
-            z_camera_view.onResume()
+            if (PermissionHelper.hasAudioRecordPermission(this) && PermissionHelper.hasWriteStoragePermission(this)) {
+                startRecording()
+            }
         }
+
     }
 
     private var focusView: ImageView? = null
@@ -157,10 +307,7 @@ class MainActivity : AppCompatActivity(), OnCameraOperateCallback, IZCameraDrawe
 
     override fun onOpenCameraSuccess(flashIsEnable: Boolean) {
         btn_flash.isEnabled = flashIsEnable
-    }
-
-    override fun onPreviewFrame(nv21Byte: ByteArray?, camera: Camera?) {
-        // todo 拿到 nv21 数据去识别人像
+        z_camera_view.startPreview()
     }
 
     override fun onOpenCameraFail() {
@@ -188,46 +335,28 @@ class MainActivity : AppCompatActivity(), OnCameraOperateCallback, IZCameraDrawe
     override fun onDrawerInit(width: Int, height: Int) {
         mWidth = width
         mHeight = height
+        FilterDrawer.sInstance?.renderSize(width, height)
     }
 
     override fun afterDrawFrame(texture: SurfaceTexture?, textureId: Int) {
         // todo 处理 处理后的 texture id 可以用来编码
     }
 
-    private val mFbos = IntArray(1)
-    private var mFb = 0
-    private var mTextureID = 0
-    private var mFullFrameRect: FullFrameRect? = null
+
     private val mStMtx = FloatArray(16)
+
     override fun beforeOnDrawFrame(texture: SurfaceTexture?, textureId: Int): Int {
-//        if (mFb == 0) {
-//            GLES30.glGenFramebuffers(1, mFbos, 0)
-//            mFullFrameRect = FullFrameRect(TwoScreenProgram())
-//            mTextureID = mFullFrameRect?.createOESTextureObject()!!
-//            GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA, mWidth, mHeight, 0, GLES30.GL_RGBA,
-//                    GLES30.GL_UNSIGNED_BYTE, null)
-//            mFb = mFbos[0]
-//        }
-//        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, mFb)
-//        GLES30.glFramebufferTexture2D(GLES30.GL_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, mTextureID, 0)
-//        GLES30.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
-//        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
-//        GLES30.glViewport(0, 0, mWidth, mHeight)
-//        texture?.getTransformMatrix(mStMtx)
-//        mFullFrameRect?.drawFrame(textureId, mStMtx)
-//        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
-//        return mTextureID
+        texture?.getTransformMatrix(mStMtx)
+        val textureInfo = TextureInfo(textureId)
+        textureInfo.textMatrix = mStMtx
+        val result = FilterDrawer.sInstance?.process(textureInfo)
+        result?.let {
+            return it
+        }
         return textureId
     }
 
     override fun onDrawerRelease() {
-        if (mFb != 0) {
-            GLES30.glDeleteFramebuffers(1, mFbos, 0)
-            mFb = 0
-        }
-        if (mTextureID != 0) {
-            GLES30.glDeleteTextures(1, intArrayOf(mTextureID), 0)
-            mTextureID = 0
-        }
+        FilterDrawer.sInstance?.destroy()
     }
 }

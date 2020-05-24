@@ -4,7 +4,7 @@ import android.graphics.SurfaceTexture
 
 /**
  * interface for outer to access the texture
- * @author zhoujunjiang
+ * @author MatrixJoy
  * @version V1.0
  * @since 2019/05/11
  *

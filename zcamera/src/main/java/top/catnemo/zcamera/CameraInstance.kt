@@ -2,6 +2,7 @@ package top.catnemo.zcamera
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Rect
 import android.graphics.SurfaceTexture
 import android.hardware.Camera
 import android.util.Log
@@ -13,7 +14,7 @@ import java.lang.RuntimeException
 
 /**
  * 相机实例，负责实例化相机
- * @author zhoujunjiang
+ * @author MatrixJoy
  * @version V1.0
  * @since 2019/05/09
  *
@@ -46,6 +47,9 @@ internal object CameraInstance : Camera.AutoFocusCallback {
     var mDesiredFps = 0
         private set
     var sMCameraOperateCallback: OnCameraOperateCallback? = null
+    var mMaxExposureCompensation = 0
+        private set
+    var mMinExposureCompensation = 0
 
     private fun openCamera(id: Int): Camera? {
         val cameras = Camera.getNumberOfCameras()
@@ -93,6 +97,10 @@ internal object CameraInstance : Camera.AutoFocusCallback {
             if (params.supportedFocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
                 params.focusMode = Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO
             }
+            params.meteringAreas = arrayListOf((Camera.Area(Rect(-1000, -1000, 1000, 1000), 1000)))
+            mMaxExposureCompensation = params.maxExposureCompensation
+            mMinExposureCompensation = params.minExposureCompensation
+            params.exposureCompensation = mMaxExposureCompensation / 2
             parameters = params
         }
         setRotation(mDisplay?.rotation!!)
@@ -104,6 +112,26 @@ internal object CameraInstance : Camera.AutoFocusCallback {
             return
         }
         mCamera?.setDisplayOrientation(CameraUtils.chooseRightRotation(mCameraId, deviceRotation))
+    }
+
+    fun updateExposureCompensation(exposureCompensation: Int) {
+        var exc = exposureCompensation * mMaxExposureCompensation / 100
+        exc = if (exc > mMaxExposureCompensation) {
+            mMaxExposureCompensation
+        } else if (exc < mMinExposureCompensation) {
+            mMinExposureCompensation
+        } else {
+            exc
+        }
+        val parameters = mCamera?.parameters
+        parameters?.apply {
+            this.exposureCompensation = exc
+            try {
+                mCamera?.parameters = this
+            } catch (e: Exception) {
+
+            }
+        }
     }
 
     fun doFocus(x: Float, y: Float, deviceScreenWidth: Int, deviceScreenHeight: Int) {
@@ -160,7 +188,6 @@ internal object CameraInstance : Camera.AutoFocusCallback {
             Log.w(TAG, "Camera still not opened")
             return
         }
-//        releaseCamera()
         mCameraId = if (mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT) {
             Camera.CameraInfo.CAMERA_FACING_BACK
         } else {

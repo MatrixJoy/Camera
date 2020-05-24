@@ -106,8 +106,8 @@ object CameraUtils {
         val centerY = (y / height * 2000 - 1000).toInt()
         val left = clamp(centerX - fAreaSize / 2, -1000, 1000)
         val top = clamp(centerY - fAreaSize / 2, -1000, 1000)
-        val right = CameraUtils.clamp(centerX + fAreaSize / 2, -1000, 1000)
-        val bottom = CameraUtils.clamp(centerY + fAreaSize / 2, -1000, 1000)
+        val right = clamp(centerX + fAreaSize / 2, -1000, 1000)
+        val bottom = clamp(centerY + fAreaSize / 2, -1000, 1000)
         val rect = Rect(left, top, right, bottom)
         return rect
     }

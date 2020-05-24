@@ -2,6 +2,8 @@ package com.catnemo.camerastudy
 
 import android.app.Application
 import android.content.Context
+import com.catnemo.zfilter.FilterDrawer
+import java.util.logging.Filter
 
 /**
  *
@@ -21,5 +23,6 @@ class ZApplication : Application() {
         super.onCreate()
         sApp = this
         sContext = applicationContext
+        FilterDrawer.sContext = sContext
     }
 }

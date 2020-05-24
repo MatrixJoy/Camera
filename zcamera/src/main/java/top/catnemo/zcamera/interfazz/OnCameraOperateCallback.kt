@@ -2,7 +2,7 @@ package top.catnemo.zcamera.interfazz
 
 /**
  * 相机操作结果回调
- * @author zhoujunjiang
+ * @author MatrixJoy
  * @version V1.0
  * @since 2019/05/10
  *

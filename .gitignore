@@ -8,5 +8,8 @@
 /.idea/workspace.xml
 .DS_Store
 /build
-/captures
 .externalNativeBuild
+/eglcore/src/androidTest
+/eglcore/src/test
+/zmedaicodec/src/androidTest
+/zmedaicodec/src/test

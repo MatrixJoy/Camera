@@ -118,10 +118,10 @@ internal object GlUtil {
     fun createTextureObject(textureTagret: Int): Int {
         val textureIds = IntArray(1)
         GLES30.glGenTextures(1, textureIds, 0)
-        GlUtil.checkGlError("glGenTextures")
+        checkGlError("glGenTextures")
         val textureId = textureIds[0]
         GLES30.glBindTexture(textureTagret, textureId)
-        GlUtil.checkGlError("glBindTexture $textureId")
+        checkGlError("glBindTexture $textureId")
         GLES30.glTexParameteri(textureTagret, GLES30.GL_TEXTURE_MIN_FILTER,
                 GLES30.GL_NEAREST)
         GLES30.glTexParameteri(textureTagret, GLES30.GL_TEXTURE_MAG_FILTER,
@@ -130,7 +130,7 @@ internal object GlUtil {
                 GLES30.GL_CLAMP_TO_EDGE)
         GLES30.glTexParameteri(textureTagret, GLES30.GL_TEXTURE_WRAP_T,
                 GLES30.GL_CLAMP_TO_EDGE)
-        GlUtil.checkGlError("glTexParameter")
+        checkGlError("glTexParameter")
         return textureId
     }
 }

@@ -1,12 +1,11 @@
 package top.catnemo.zcamera.render
 
 import android.graphics.SurfaceTexture
-import android.opengl.GLES11Ext
-import android.opengl.GLES30
-import android.opengl.GLSurfaceView
-import android.opengl.Matrix
+import android.opengl.*
+import top.catnemo.zcamera.frame.ZCameraFrame
 import top.catnemo.zcamera.interfazz.ICapturePhoto
 import top.catnemo.zcamera.interfazz.IZCameraDrawer
+import top.catnemo.zcamera.record.IRecorder
 import top.catnemo.zcamera.util.GlUtil
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -15,7 +14,7 @@ import javax.microedition.khronos.opengles.GL10
 
 /**
  * 相机数据渲染
- * @author zhoujunjiang
+ * @author MatrixJoy
  * @version V1.0
  * @since 2019/05/10
  *
@@ -45,7 +44,8 @@ internal class ZCameraRender : GLSurfaceView.Renderer {
     var mWaitDraw = false
     var mOnSurfaceTextureCreatedListener: OnSurfaceTextureCreatedListener? = null
     var mIDrawer: IZCameraDrawer? = null
-    var onSurfaceCreated = false
+
+    var mIRecorder: IRecorder? = null
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         mZDrawerOES = ZCameraDrawer(ZCameraDrawer.TEXTURE_OES)
@@ -55,7 +55,6 @@ internal class ZCameraRender : GLSurfaceView.Renderer {
             mSurfaceTexture = SurfaceTexture(mTextureOESId)
             mOnSurfaceTextureCreatedListener?.onSurfaceTextureCreated(mSurfaceTexture)
         }
-        onSurfaceCreated = true
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -89,9 +88,17 @@ internal class ZCameraRender : GLSurfaceView.Renderer {
         if (processId != mTexture2DId) {
             mtx = GlUtil.IDENTITY_MATRIX
         }
+
+        mIRecorder?.apply {
+            if (isRecording()) {
+                mSurfaceTexture?.apply {
+                    recordFrame(ZCameraFrame(processId, mtx, mModeMtx, timestamp))
+                }
+            }
+        }
+
         mZDrawer2D?.draw(processId, mtx)
         mIDrawer?.afterDrawFrame(mSurfaceTexture, processId)
-
     }
 
     private fun changeRotation() {
@@ -129,11 +136,8 @@ internal class ZCameraRender : GLSurfaceView.Renderer {
                 .order(ByteOrder.LITTLE_ENDIAN)
         GLES30.glReadPixels(0, 0, mWidth, mHeight, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, bb)
         GlUtil.checkGlError("glReadPixels")
-        bb.rewind()
-        val byteArray = ByteArray(bb.remaining())
-        bb.get(byteArray)
         mWaitDraw = false
-        iCapturePhoto.onCapturePhoto(byteArray)
+        iCapturePhoto.onCapturePhoto(bb)
     }
 
     fun release() {

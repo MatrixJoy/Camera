@@ -1,12 +1,19 @@
 #version 300 es
-precision mediump float; // 精度
+precision mediump float;// 精度
 
 in vec2 vTextureCoord;
 uniform sampler2D sTexture;
 out vec4  gl_FragColor;
+
+vec4 scale(float scaleRadio){
+    vec2 center = vec2(0.0, 0.0);
+    vec2 tex = (vTextureCoord-center) / scaleRadio + center;
+    tex = mod(tex, 1.0);
+    return texture(sTexture, tex);
+}
 void main(){
     vec2 st = vTextureCoord.xy;
     st.y *=2.0;
     st = fract(st);
-    gl_FragColor = texture(sTexture, st);
+    gl_FragColor = scale(0.5);
 }

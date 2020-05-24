@@ -9,12 +9,12 @@ import java.nio.FloatBuffer
 
 /**
  * 2D 纹理 绘制面板
- * @author zhoujunjiang
+ * @author MatrixJoy
  * @version V1.0
  * @since 2019/05/10
  *
  */
-internal class ZCameraDrawer(textureTarget: Int) {
+class ZCameraDrawer(textureTarget: Int) {
     private val SIZEOF_FLOAT = 4
     /**
      * 顶点坐标
