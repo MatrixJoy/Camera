@@ -15,7 +15,7 @@ import top.catnemo.zmedaicodec.util.Logger;
 /**
  * hard encoder
  *
- * @author zhoujunjiang
+ * @author matrixJoy
  * @version V1.0
  * @since 2019/05/20
  */

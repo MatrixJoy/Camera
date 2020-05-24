@@ -17,7 +17,7 @@ import com.catnemo.camerastudy.util.UIUtils
 
 /**
  * @description 特效view
- * @author  franticzhou
+ * @author  matrixJoy
  * @date    2019-12-13   20:03
  */
 class FilterView : LinearLayout {

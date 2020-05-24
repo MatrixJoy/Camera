@@ -5,7 +5,7 @@ import top.catnemo.zmedaicodec.BuildConfig;
 
 /**
  *
- * @author franticzhou
+ * @author matrixJoy
  * @description
  * @date 2019-11-12   10:57 
  */

@@ -14,7 +14,7 @@ import java.lang.RuntimeException
 
 /**
  * @description 滤镜入口
- * @author  franticzhou
+ * @author  matrixJoy
  * @date    2019-12-12   13:59
  */
 @SuppressLint("StaticFieldLeak")

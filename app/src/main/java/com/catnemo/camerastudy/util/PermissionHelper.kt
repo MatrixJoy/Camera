@@ -14,7 +14,7 @@ import androidx.core.content.PermissionChecker
 
 /**
  *权限管理器
- * @author zhoujunjiang
+ * @author matrixJoy
  * @version V1.0
  * @since 2019/03/19
  *

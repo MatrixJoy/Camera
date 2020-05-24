@@ -8,7 +8,7 @@ import top.catnemo.zcamera.Constant
 
 /**
  *
- * @author zhoujunjiang
+ * @author matrixJoy
  * @version V1.0
  * @since 2019/03/18
  *

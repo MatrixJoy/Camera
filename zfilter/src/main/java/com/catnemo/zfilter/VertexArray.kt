@@ -7,7 +7,7 @@ import java.nio.FloatBuffer
 
 /**
  * @description 顶点坐标处理类
- * @author  franticzhou
+ * @author  matrixJoy
  * @date    2019-12-13   13:18
  */
 class VertexArray {

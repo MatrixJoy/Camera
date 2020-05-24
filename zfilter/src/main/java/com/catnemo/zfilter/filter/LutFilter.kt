@@ -10,7 +10,7 @@ import com.catnemo.zfilter.util.GlUtil
 
 /**
  * @description
- * @author  franticzhou
+ * @author  matrixJoy
  * @date    2019-12-16   13:25
  */
 class LutFilter : TwoInputTextureFilter {

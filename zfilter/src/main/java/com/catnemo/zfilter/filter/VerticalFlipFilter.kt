@@ -4,7 +4,7 @@ import com.catnemo.zfilter.R
 
 /**
  * @description
- * @author  franticzhou
+ * @author  matrixJoy
  * @date    2019-12-17   13:40
  */
 class VerticalFlipFilter : BaseFilter {

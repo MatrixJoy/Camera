@@ -2,7 +2,7 @@ package top.catnemo.zcamera.interfazz
 
 /**
  * camera 接口
- * @author zhoujunjiang
+ * @author matrixJoy
  * @version V1.0
  * @since 2019/05/10
  *

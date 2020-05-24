@@ -8,7 +8,7 @@ import com.catnemo.zfilter.util.GlUtil
 
 /**
  * @description 双输入纹理的filter
- * @author  franticzhou
+ * @author  matrixJoy
  * @date    2019-12-16   12:54
  */
 open class TwoInputTextureFilter : BaseFilter {

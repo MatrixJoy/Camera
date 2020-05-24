@@ -16,7 +16,7 @@ import java.util.*
 
 /**
  * @description 滤镜基础类
- * @author  franticzhou
+ * @author  matrixJoy
  * @date    2019-12-12   19:13
  */
 open class BaseFilter {

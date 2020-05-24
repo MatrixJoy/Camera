@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
 /**
  * MediaMuxer interface
  *
- * @author zhoujunjiang
+ * @author matrixJoy
  * @version V1.0
  * @since 2019/05/21
  */

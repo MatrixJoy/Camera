@@ -7,7 +7,7 @@ import java.io.InputStreamReader
 
 /**
  * 从文件中读取字符串
- * @author zhoujunjiang
+ * @author matrixJoy
  * @version V1.0
  * @since 2018/11/30
  *

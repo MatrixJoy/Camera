@@ -8,7 +8,7 @@ import com.catnemo.camerastudy.ZApplication
 
 /**
  *
- * @author zhoujunjiang
+ * @author matrixJoy
  * @version V1.0
  * @since 2019/05/09
  *

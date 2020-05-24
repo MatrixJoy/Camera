@@ -16,7 +16,7 @@ import com.catnemo.zfilter.filter.*
 
 /**
  * @description 特效view
- * @author  franticzhou
+ * @author  matrixJoy
  * @date    2019-12-13   20:03
  */
 class EffectView : FrameLayout {
