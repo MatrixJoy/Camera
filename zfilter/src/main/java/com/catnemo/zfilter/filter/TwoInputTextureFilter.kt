@@ -28,6 +28,7 @@ open class TwoInputTextureFilter : BaseFilter {
     constructor(fragmentShader: String) : super(readShaderFromRaw(R.raw.two_input_vertex_shader), fragmentShader)
 
     override fun onInit() {
+        super.onInit()
         uTexture2Location = GLES30.glGetUniformLocation(program, U_TEXTURE_2)
         GlUtil.checkLocation(uTexture2Location, "onInit uTexture2Location")
 
