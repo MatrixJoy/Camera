@@ -2,12 +2,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 28
-
+    compileSdkVersion BuildVersion.compile_sdk
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 28
+        minSdkVersion BuildVersion.min_sdk
+        targetSdkVersion BuildVersion.target_sdk
         versionCode 1
         versionName "1.0"
     }
@@ -23,9 +22,8 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation Deps.kotlin.stlib
     implementation project(":zmedaicodec")
-//    implementation project(":soudtouch")
 }
 repositories {
     mavenCentral()

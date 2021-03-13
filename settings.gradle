@@ -1,5 +1,4 @@
-include ':app', ':zfilter'
+include ':demo', ':zfilter'
 include ':zcamera'
 include ':eglcore'
 include ':zmedaicodec'
-//include ':soudtouch'
