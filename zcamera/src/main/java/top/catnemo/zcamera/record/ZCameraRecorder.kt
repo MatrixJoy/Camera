@@ -11,10 +11,10 @@ import top.catnemo.zcamera.record.audio.SonicAudioProcessor
 import top.catnemo.zcamera.record.audio.ZCameraAudioRecorder
 import top.catnemo.zcamera.record.video.IVideoRecorder
 import top.catnemo.zcamera.record.video.ZCameraVideoRecorder
-import top.catnemo.zmedaicodec.IMediaEnCoder
-import top.catnemo.zmedaicodec.IMediaEncoderCallBack
-import top.catnemo.zmedaicodec.ZHardMediaEncoder
-import top.catnemo.zmedaicodec.util.Logger
+import top.catnemo.codec.IMediaEnCoder
+import top.catnemo.codec.IMediaEncoderCallBack
+import top.catnemo.codec.ZHardMediaEncoder
+import top.catnemo.codec.util.Logger
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

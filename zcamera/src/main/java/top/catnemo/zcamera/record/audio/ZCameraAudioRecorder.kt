@@ -4,7 +4,7 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
 import top.catnemo.zcamera.Constant
-import top.catnemo.zmedaicodec.util.Logger
+import top.catnemo.codec.util.Logger
 
 /**
  *

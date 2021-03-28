@@ -125,7 +125,7 @@
                 android:textColor="#ffffff" />
     </RadioGroup>
 
-    <com.catnemo.camerastudy.EffectView
+    <com.catnemo.avstudy.EffectView
             android:id="@+id/view_effect"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -133,7 +133,7 @@
             android:background="@android:color/black"
             android:visibility="invisible" />
 
-    <com.catnemo.camerastudy.FilterView
+    <com.catnemo.avstudy.FilterView
             android:id="@+id/view_filter"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

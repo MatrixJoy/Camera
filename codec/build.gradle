@@ -23,8 +23,5 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation Deps.kotlin.stlib
-    implementation project(':codec')
-}
-repositories {
-    mavenCentral()
+
 }

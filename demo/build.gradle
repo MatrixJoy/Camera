@@ -30,4 +30,5 @@ dependencies {
     implementation Deps.androidx.recyclerview
     implementation project(':zcamera')
     implementation project(':zfilter')
+    implementation project(":codec")
 }
